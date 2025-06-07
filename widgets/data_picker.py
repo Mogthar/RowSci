@@ -1,5 +1,6 @@
-from PySide6.QtWidgets import QDialog, QVBoxLayout, QLineEdit, QWidget, QHBoxLayout, QPushButton, QFileDialog
+from PySide6.QtWidgets import QDialog, QVBoxLayout, QLineEdit, QWidget, QHBoxLayout, QPushButton, QFileDialog, QLabel
 from data.data_manager import dataManager
+from data.data_source import DataSource
 
 class DataPicker(QDialog):
     def __init__(self):
@@ -11,8 +12,11 @@ class DataPicker(QDialog):
         self.setup_geometry()
 
         self.layout = QVBoxLayout()
-        for source in dataManager.data_sources.keys():
-            self.layout.addWidget(DataSourceInput(source))
+        for source in dataManager.data_loaders.keys():
+            self.layout.addWidget(DataSourceInput(self, source))
+        self.error_message = QLabel()
+        self.error_message.setStyleSheet("color: red")
+        self.layout.addWidget(self.error_message)
 
         self.setLayout(self.layout)
 
@@ -26,12 +30,13 @@ class DataPicker(QDialog):
                          self.height)
     
 class DataSourceInput(QWidget):
-    def __init__(self, source: str):
+    def __init__(self, parent: DataPicker, source: DataSource):
         super().__init__()
+        self.data_picker = parent
         self.source = source
 
         self.layout = QHBoxLayout()
-        self.input = QLineEdit(f"{source} File path")
+        self.input = QLineEdit(f"{source.value} File path")
         self.input.setReadOnly(True)
         
         self.button = QPushButton("Load")
@@ -46,7 +51,12 @@ class DataSourceInput(QWidget):
         url = url.toLocalFile()
         if url:
             self.input.setText(url)
-            dataManager.load_data(self.source, url)
+            try:
+                dataManager.load_data(self.source, url)
+                self.data_picker.error_message.setText("")
+            except Exception as e:
+                print(e)
+                self.data_picker.error_message.setText(f"Failed to load data for source: {self.source}")
 
 
         
