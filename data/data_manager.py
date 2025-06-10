@@ -2,7 +2,7 @@ import pandas as pd
 from event_manager.event_manager import event_manager, Event
 from data.data_source import DataSource
 import os
-
+from pandas.api.types import is_numeric_dtype
 
 class DataPacket:
     def __init__(self, main_table: pd.DataFrame = None, metadata: any = None):
@@ -46,13 +46,14 @@ class DataManager:
     def load_cortex_data(self, url: str):
         df = pd.read_excel(url,
                            skiprows=[i for i in range(38)] + [39],
-                           na_values = ['-'])
+                           na_values = ['-'],
+                           decimal=',')
         df['t'] = df['t'].apply(self.convert_hh_mm_ss_to_seconds)
         self.cortex_data.main_table = df
         event_manager.trigger_event(Event.CORTEX_DATA_LOADED)
 
     def load_artinis_data(self, url: str):
-        raw_df = pd.read_excel(url, header=None)
+        raw_df = pd.read_excel(url, header=None, decimal=',')
         # search for Legend
         legend_start_index = None
         for row_idx, row in raw_df.iterrows():
@@ -70,7 +71,6 @@ class DataManager:
             else:
                 main_data_start_index = row_idx + 2
                 break
-        print("column name map", column_name_map)
         if main_data_start_index is None:
             raise ValueError("Real data not found")
         
@@ -79,6 +79,13 @@ class DataManager:
 
         self.artinis_data.main_table = main_data_df
         self.artinis_data.metadata = column_name_map
+        for column in main_data_df.columns:
+            if not is_numeric_dtype(main_data_df[column]):
+                try:
+                    main_data_df[column] = pd.to_numeric(main_data_df[column], errors='raise')
+                except:
+                    print(f"Error converting column {column} to numeric")
+
         event_manager.trigger_event(Event.ARTINIS_DATA_LOADED)
         
     def load_default(self):
@@ -89,6 +96,4 @@ dataManager = DataManager()
 # dataManager.load_data("CORTEX", "C:/Users/kucer/Downloads/CPET__Boldišová_Ella_2025.05.20_11.19.00_.xlsx")
 # print(dataManager.cortex_data['t'])
 # dataManager.cortex_data.info()
-print(os.getcwd())
 dataManager.load_data(DataSource.ARTINIS, "/Users/jure/Downloads/artinis_data.xlsx")
-dataManager.artinis_data.main_table.info()
