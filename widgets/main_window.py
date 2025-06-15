@@ -16,19 +16,16 @@ class MainWindow(QMainWindow):
         self.setup_menu()
 
         # Status Bar
-        self.status = self.statusBar()
-        self.status.showMessage("Data loaded and plotted")
-        self.status.show()
+        # self.status = self.statusBar()
+        # self.status.showMessage("Data loaded and plotted")
+        # self.status.show()
 
         # central widget
         data_tabs = DataTabs(self)
         self.setCentralWidget(data_tabs)
 
-
-        # Window dimensions
-        # TODO: sort out resizing and fixing the size
-        geometry = self.screen().availableGeometry()
-        self.setFixedSize(geometry.width() * 0.8, geometry.height() * 0.7)
+        # Show window maximized
+        self.showMaximized()
 
     def setup_menu(self):
         self.menu = self.menuBar()
