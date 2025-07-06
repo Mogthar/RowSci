@@ -125,8 +125,8 @@ class LimitController(QWidget):
         self.layout.addWidget(self.set_limits_button)
 
     def reset_style(self):
-        self.min_limit.setStyleSheet("color: white;")
-        self.max_limit.setStyleSheet("color: white;")
+        self.min_limit.setStyleSheet("color: black;")
+        self.max_limit.setStyleSheet("color: black;")
     
     def set_limits(self):
         if float(self.min_limit.text()) > float(self.max_limit.text()):
